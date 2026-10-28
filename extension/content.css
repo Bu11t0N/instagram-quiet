@@ -1,0 +1,15 @@
+[data-ig-quiet-hidden] {
+  display: none !important;
+}
+
+html[data-ig-quiet-scroll], body[data-ig-quiet-scroll] {
+  overflow: auto !important;
+  overscroll-behavior: auto !important;
+}
+
+body[data-ig-quiet-fixed] {
+  position: static !important;
+  top: auto !important;
+  height: auto !important;
+  max-height: none !important;
+}

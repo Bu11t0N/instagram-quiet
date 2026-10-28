@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Instagram Quiet</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header><img src="icons/48.png" alt="" width="36" height="36"><div><h1>Instagram Quiet</h1><p>Меньше окон. Больше страницы.</p></div></header>
+  <main>
+    <label class="setting master"><span>Расширение включено</span><input id="enabled" type="checkbox" role="switch" checked></label>
+    <div id="filters">
+      <label class="setting"><span>Убирать просьбы войти<small>Окна входа и регистрации</small></span><input id="hideLogin" type="checkbox" role="switch" checked></label>
+      <label class="setting"><span>Убирать «Открыть приложение»<small>Всплывающие окна и панели</small></span><input id="hideApp" type="checkbox" role="switch" checked></label>
+      <label class="setting"><span>Открывать публикации напрямую<small>Без входа, когда фильтр окон входа включён</small></span><input id="directPosts" type="checkbox" role="switch" checked></label>
+    </div>
+    <p id="status" role="status" aria-live="polite">Проверяем текущую вкладку…</p>
+    <p class="note">Настройки применяются сразу. Страница входа остаётся доступной. Контент, требующий авторизации, может быть недоступен.</p>
+  </main>
+  <footer>Работает на устройстве · Без сбора данных</footer>
+  <script src="rules.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
