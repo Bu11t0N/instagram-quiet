@@ -18,6 +18,10 @@ let profile;
 let settingsPage;
 let page;
 let errors;
+const serveFixture = route => route.fulfill({
+  contentType: "text/html",
+  body: '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}main{min-height:3000px}.modal{position:fixed;inset:20% 15%;z-index:20;background:white}.shade{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19}.panel{position:fixed;bottom:0;left:0;right:0;z-index:30;background:white}</style></head><body><main id="content"><h1>Public profile</h1><p>A visible publication.</p></main></body></html>'
+});
 
 before(async () => {
   profile = fs.mkdtempSync(path.join(os.tmpdir(), "instagram-quiet-test-"));
@@ -34,10 +38,6 @@ before(async () => {
   assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
   console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
   await cdp.detach();
-  await context.route("https://www.instagram.com/**", route => route.fulfill({
-    contentType: "text/html",
-    body: '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}main{min-height:3000px}.modal{position:fixed;inset:20% 15%;z-index:20;background:white}.shade{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19}.panel{position:fixed;bottom:0;left:0;right:0;z-index:30;background:white}</style></head><body><main id="content"><h1>Public profile</h1><p>A visible publication.</p></main></body></html>'
-  }));
   settingsPage = await context.newPage();
   await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   // This also verifies that Chromium really loaded the packaged extension.
@@ -52,6 +52,9 @@ after(async () => {
 beforeEach(async () => {
   await settingsPage.evaluate(() => chrome.storage.sync.clear());
   page = await context.newPage();
+  // Keep interception off extension pages: Chromium Fetch interception can stall
+  // chrome-extension navigation even when only an HTTPS route pattern is used.
+  await page.route("https://www.instagram.com/**", serveFixture);
   errors = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("https://www.instagram.com/example/");
