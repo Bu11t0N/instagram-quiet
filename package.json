@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "repository": { "type": "git", "url": "https://github.com/Bu11t0N/instagram-quiet.git" },
-  "engines": { "node": ">=18" },
+  "engines": { "node": ">=20" },
   "description": "Local-only WebExtension that dismisses Instagram login and app nags.",
   "scripts": {
     "build": "python3 scripts/build.py",

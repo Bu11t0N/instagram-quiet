@@ -18,7 +18,7 @@ profiles or authenticated network captures.
 
 ## Develop
 
-Requirements: Node.js 18+, Python 3.9+, and a Chromium browser for integration tests.
+Requirements: Node.js 20+, Python 3.9+, and a Chromium browser for integration tests.
 
 ```sh
 npm install

@@ -29,7 +29,7 @@ before(async () => {
   context = await chromium.launchPersistentContext(profile, {
     executablePath,
     channel: executablePath ? undefined : 'chromium',
-    headless: true,
+    headless: process.env.HEADED !== '1',
     ignoreDefaultArgs: ['--disable-extensions'],
     args: ["--no-sandbox", "--disable-crashpad-for-testing", "--enable-unsafe-extension-debugging"],
   });
@@ -38,8 +38,16 @@ before(async () => {
   assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
   console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
   await cdp.detach();
+  context.setDefaultTimeout(5000);
   settingsPage = await context.newPage();
-  await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
+  settingsPage.on('pageerror', error => console.error('Popup script error:', error.message));
+  settingsPage.on('requestfailed', request => console.error('Popup request failed:', request.url(), request.failure()?.errorText));
+  await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'commit', timeout: 15000 });
+  await settingsPage.waitForFunction(() => {
+    const status = document.getElementById('status');
+    return status && status.textContent !== 'Проверяем текущую вкладку…';
+  });
+  console.info('Popup initialized:', await settingsPage.title());
   // This also verifies that Chromium really loaded the packaged extension.
   assert.equal(await settingsPage.title(), "Instagram Quiet");
 });
@@ -52,8 +60,7 @@ after(async () => {
 beforeEach(async () => {
   await settingsPage.evaluate(() => chrome.storage.sync.clear());
   page = await context.newPage();
-  // Keep interception off extension pages: Chromium Fetch interception can stall
-  // chrome-extension navigation even when only an HTTPS route pattern is used.
+  // Scope fixture routes to the site tab, leaving extension popup requests alone.
   await page.route("https://www.instagram.com/**", serveFixture);
   errors = [];
   page.on("pageerror", error => errors.push(error.message));

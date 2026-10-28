@@ -193,7 +193,7 @@ project and is not affiliated with Instagram or Meta.
 
 ## Development
 
-Requirements: **Node.js 18+**, **Python 3.9+**, and Chromium for browser integration
+Requirements: **Node.js 20+**, **Python 3.9+**, and Chromium for browser integration
 tests. There are no runtime dependencies; Playwright is a development dependency.
 
 ```sh
