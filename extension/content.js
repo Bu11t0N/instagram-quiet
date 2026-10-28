@@ -52,6 +52,13 @@
     if (!control || !rules.plainClick(event, control)) return;
     if (rules.isLoginAction(control.textContent || control.value || control.getAttribute("aria-label"), control.getAttribute("href"))) {
       loginIntentUntil = Date.now() + 30000;
+      // React may reuse a dialog already hidden by us instead of inserting one.
+      for (const [shell, item] of suppressed) {
+        if (rules.classify(item.candidate, { ...options, hideLogin: true, hideApp: false }) !== "login") continue;
+        showElement(shell);
+        preservedLogins.add(item.candidate);
+        suppressed.delete(shell);
+      }
       schedule();
       return;
     }

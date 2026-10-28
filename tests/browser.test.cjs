@@ -236,6 +236,13 @@ test('inline important display values are restored when the extension is disable
   assert.equal(await page.$eval('#login', el => el.style.getPropertyPriority('display')), 'important');
 });
 
+test('an explicit login click restores an existing hidden dialog', async () => {
+  await add(`<button id="request-login">Log in</button><div id="login" role="dialog" class="modal">${login}</div>`);
+  await hidden('#login');
+  await page.click('#request-login');
+  await shown('#login');
+});
+
 test('post navigation preserves carousel query and stops when its filter is disabled', async () => {
   await add('<a id="login-link" href="/accounts/login/">Log in</a><a id="post-link" href="/p/Example/?img_index=2">Open post</a>');
   await page.evaluate(() => document.querySelector('#post-link').addEventListener('click', event => {

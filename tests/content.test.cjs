@@ -36,6 +36,16 @@ test('synthetic login clicks cannot preserve an unsolicited dialog', async () =>
   assert.equal(gate.getAttribute(HIDDEN), 'login');
 });
 
+test('explicit login also restores a dialog previously hidden and reused by the site', async () => {
+  const env = await environment();
+  const gate = login(); env.body.append(gate); await env.flush();
+  assert.equal(gate.getAttribute(HIDDEN), 'login');
+  const button = new Element('button', {}, 'Log in'); env.main.append(button);
+  env.click(button); await env.flush();
+  assert.equal(gate.hasAttribute(HIDDEN), false);
+  assert.equal(env.status().loginPreserved, true);
+});
+
 test('a requested login modal remains visible even when it also advertises Open app', async () => {
   const env = await environment(); const button = new Element('button', {}, 'Log in'); env.main.append(button);
   env.click(button);
