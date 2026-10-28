@@ -51,11 +51,14 @@ beforeEach(async () => {
   errors = [];
   page = await context.newPage();
   extensionSession = await context.newCDPSession(page);
-  await extensionSession.send('Extensions.clearStorageItems', { id: extensionId, storageArea: 'sync' });
   // Scope fixture routes to the site tab, leaving extension popup requests alone.
   await page.route("https://www.instagram.com/**", serveFixture);
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("https://www.instagram.com/example/");
+  // Storage access is permitted only after this renderer hosts the extension's
+  // content script; an about:blank target cannot access its storage.
+  await extensionSession.send('Extensions.clearStorageItems', { id: extensionId, storageArea: 'sync' });
+  await page.waitForTimeout(120);
 });
 
 afterEach(async () => {
