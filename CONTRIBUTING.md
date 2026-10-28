@@ -35,6 +35,10 @@ not simulate layout, CSS specificity or browser extension loading. Use the separ
 browser suite for those concerns. Neither suite establishes compatibility with
 every experiment on the live Instagram site.
 
+The browser suite changes extension settings through Chromium's DevTools API.
+Popup UI interaction is not covered: automated navigation to that page stalled
+in the initial CI setup. Do not describe the suite as a complete popup UI test.
+
 For local debugging, load the matching unpacked build from `dist/chrome` or
 `dist/firefox`, then reload the extension and the Instagram tab after changes.
 

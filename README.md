@@ -236,7 +236,9 @@ The model tests do not emulate browser layout or CSS. The Chromium fixtures do
 not prove compatibility with every variant of the live site. Firefox, Android
 and authenticated account flows require separate manual verification. The initial
 development environment could not launch Chromium because of system-call
-restrictions; the workflow status above reports subsequent CI results.
+restrictions; the workflow status above reports subsequent CI results. Automated
+navigation to the popup also stalled in CI, so the browser suite controls stored
+settings through Chromium's test API. Popup UI interaction remains unverified.
 
 ### Project structure
 

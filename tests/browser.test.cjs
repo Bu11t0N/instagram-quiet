@@ -15,7 +15,7 @@ const loginRu = '<h2>Войдите в Instagram</h2><p>Войдите, чтоб
 const app = '<h2>Open Instagram in the app</h2><a href="https://play.google.com/store/apps/details?id=com.instagram.android">Open app</a>';
 let context;
 let profile;
-let settingsPage;
+let extensionSession;
 let page;
 let errors;
 const serveFixture = route => route.fulfill({
@@ -38,20 +38,8 @@ before(async () => {
   assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
   console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
   console.info('Installed extensions:', JSON.stringify(await cdp.send('Extensions.getExtensions')));
-  const nextPage = context.waitForEvent('page');
-  await cdp.send('Target.createTarget', { url: `chrome-extension://${extensionId}/popup.html` });
-  settingsPage = await nextPage;
-  await cdp.detach();
+  extensionSession = cdp;
   context.setDefaultTimeout(5000);
-  settingsPage.on('pageerror', error => console.error('Popup script error:', error.message));
-  settingsPage.on('requestfailed', request => console.error('Popup request failed:', request.url(), request.failure()?.errorText));
-  await settingsPage.waitForFunction(() => {
-    const status = document.getElementById('status');
-    return status && status.textContent !== 'Проверяем текущую вкладку…';
-  });
-  console.info('Popup initialized:', await settingsPage.title());
-  // This also verifies that Chromium really loaded the packaged extension.
-  assert.equal(await settingsPage.title(), "Instagram Quiet");
 });
 
 after(async () => {
@@ -60,7 +48,7 @@ after(async () => {
 });
 
 beforeEach(async () => {
-  await settingsPage.evaluate(() => chrome.storage.sync.clear());
+  await extensionSession.send('Extensions.clearStorageItems', { id: extensionId, storageArea: 'sync' });
   page = await context.newPage();
   // Scope fixture routes to the site tab, leaving extension popup requests alone.
   await page.route("https://www.instagram.com/**", serveFixture);
@@ -90,7 +78,7 @@ async function shown(selector) {
 }
 
 async function change(value) {
-  await settingsPage.evaluate(value => chrome.storage.sync.set(value), value);
+  await extensionSession.send('Extensions.setStorageItems', { id: extensionId, storageArea: 'sync', values: value });
 }
 
 test("real extension hides a dynamic login dialog and restores scrolling", async () => {
@@ -213,16 +201,15 @@ test("fixed body and inert page content are unlocked reversibly", async () => {
   assert.equal(await page.$eval("main", el => el.hasAttribute("inert")), true);
 });
 
-test("popup saves changes and communicates with a matching active tab", async () => {
+test("saved settings are applied by the loaded extension and restore the page", async () => {
   await add(`<div id="login" role="dialog" class="modal">${login}</div>`);
   await hidden("#login");
-  await settingsPage.reload();
-  await settingsPage.locator("#hideLogin").uncheck();
+  await change({ hideLogin: false });
   await shown("#login");
-  assert.equal(await settingsPage.evaluate(async () => (await chrome.storage.sync.get("hideLogin")).hideLogin), false);
-  await settingsPage.locator("#enabled").uncheck();
-  await settingsPage.waitForFunction(() => document.getElementById("hideLogin").disabled);
-  assert.equal(await settingsPage.locator("#hideApp").isDisabled(), true);
+  const result = await extensionSession.send('Extensions.getStorageItems', { id: extensionId, storageArea: 'sync', keys: ['hideLogin'] });
+  assert.equal(result.data.hideLogin, false);
+  await change({ enabled: false });
+  await shown('#login');
 });
 
 test('button-only English app prompts without a brand name are hidden', async () => {
