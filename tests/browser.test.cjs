@@ -34,15 +34,17 @@ before(async () => {
     args: ["--no-sandbox", "--disable-crashpad-for-testing", "--enable-unsafe-extension-debugging"],
   });
   const cdp = await context.browser().newBrowserCDPSession();
-  const installed = await cdp.send('Extensions.loadUnpacked', { path: extension });
+  const installed = await cdp.send('Extensions.loadUnpacked', { path: extension, enableInIncognito: true });
   assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
   console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
+  console.info('Installed extensions:', JSON.stringify(await cdp.send('Extensions.getExtensions')));
+  const nextPage = context.waitForEvent('page');
+  await cdp.send('Target.createTarget', { url: `chrome-extension://${extensionId}/popup.html` });
+  settingsPage = await nextPage;
   await cdp.detach();
   context.setDefaultTimeout(5000);
-  settingsPage = await context.newPage();
   settingsPage.on('pageerror', error => console.error('Popup script error:', error.message));
   settingsPage.on('requestfailed', request => console.error('Popup request failed:', request.url(), request.failure()?.errorText));
-  await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'commit', timeout: 15000 });
   await settingsPage.waitForFunction(() => {
     const status = document.getElementById('status');
     return status && status.textContent !== 'Проверяем текущую вкладку…';
