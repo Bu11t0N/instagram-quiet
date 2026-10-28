@@ -27,14 +27,19 @@ before(async () => {
     channel: executablePath ? undefined : 'chromium',
     headless: true,
     ignoreDefaultArgs: ['--disable-extensions'],
-    args: ["--no-sandbox", "--disable-crashpad-for-testing", `--disable-extensions-except=${extension}`, `--load-extension=${extension}`],
+    args: ["--no-sandbox", "--disable-crashpad-for-testing", "--enable-unsafe-extension-debugging"],
   });
+  const cdp = await context.browser().newBrowserCDPSession();
+  const installed = await cdp.send('Extensions.loadUnpacked', { path: extension });
+  assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
+  console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
+  await cdp.detach();
   await context.route("https://www.instagram.com/**", route => route.fulfill({
     contentType: "text/html",
     body: '<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0}main{min-height:3000px}.modal{position:fixed;inset:20% 15%;z-index:20;background:white}.shade{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:19}.panel{position:fixed;bottom:0;left:0;right:0;z-index:30;background:white}</style></head><body><main id="content"><h1>Public profile</h1><p>A visible publication.</p></main></body></html>'
   }));
   settingsPage = await context.newPage();
-  await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`);
+  await settingsPage.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'domcontentloaded', timeout: 15000 });
   // This also verifies that Chromium really loaded the packaged extension.
   assert.equal(await settingsPage.title(), "Instagram Quiet");
 });
