@@ -38,7 +38,7 @@ before(async () => {
   assert.equal(installed.id, extensionId, 'Chrome development key must determine the extension ID');
   console.info(`Loaded Instagram Quiet ${manifest.version} in ${context.browser().version()} (${installed.id})`);
   console.info('Installed extensions:', JSON.stringify(await cdp.send('Extensions.getExtensions')));
-  extensionSession = cdp;
+  await cdp.detach();
   context.setDefaultTimeout(5000);
 });
 
@@ -48,11 +48,12 @@ after(async () => {
 });
 
 beforeEach(async () => {
-  await extensionSession.send('Extensions.clearStorageItems', { id: extensionId, storageArea: 'sync' });
+  errors = [];
   page = await context.newPage();
+  extensionSession = await context.newCDPSession(page);
+  await extensionSession.send('Extensions.clearStorageItems', { id: extensionId, storageArea: 'sync' });
   // Scope fixture routes to the site tab, leaving extension popup requests alone.
   await page.route("https://www.instagram.com/**", serveFixture);
-  errors = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("https://www.instagram.com/example/");
 });
