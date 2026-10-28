@@ -1,10 +1,15 @@
-name: Checks
+name: Build and unit checks
 
 on:
   push:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      browser_tests:
+        description: Run experimental Chromium integration tests (setup currently blocked)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -27,9 +32,13 @@ jobs:
         run: |
           npm run check
           npm test
+      - name: Build Chrome and Firefox packages
+        run: npm run build
       - name: Install Chromium
+        if: github.event_name == 'workflow_dispatch' && inputs.browser_tests
         run: npx playwright install --with-deps chromium
       - name: Test the loaded extension
+        if: github.event_name == 'workflow_dispatch' && inputs.browser_tests
         env:
           CHROMIUM_PATH: ''
           HEADED: '1'

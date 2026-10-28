@@ -7,7 +7,7 @@
 <p align="center">Browse the Instagram website with fewer login and app interruptions.</p>
 
 <p align="center">
-  <a href="https://github.com/Bu11t0N/instagram-quiet/actions/workflows/checks.yml"><img src="https://github.com/Bu11t0N/instagram-quiet/actions/workflows/checks.yml/badge.svg" alt="Checks"></a>
+  <a href="https://github.com/Bu11t0N/instagram-quiet/actions/workflows/checks.yml"><img src="https://github.com/Bu11t0N/instagram-quiet/actions/workflows/checks.yml/badge.svg" alt="Build and unit checks"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-4ad6be" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-4ad6be" alt="Manifest V3">
 </p>
@@ -229,16 +229,21 @@ Chrome Web Store credential. Store publication may require using the store's key
 
 The project includes rule tests, click/navigation tests, content-script tests
 using a limited DOM/API model, and a separate Chromium suite that loads the real
-extension against controlled Instagram-like pages. GitHub Actions runs these
-checks and builds installable development packages.
+extension against controlled Instagram-like pages. By default, GitHub Actions
+runs syntax/model tests and builds installable development packages. Its badge
+reports those checks, not successful browser integration.
 
 The model tests do not emulate browser layout or CSS. The Chromium fixtures do
 not prove compatibility with every variant of the live site. Firefox, Android
 and authenticated account flows require separate manual verification. The initial
 development environment could not launch Chromium because of system-call
-restrictions; the workflow status above reports subsequent CI results. Automated
-navigation to the popup also stalled in CI, so the browser suite controls stored
-settings through Chromium's test API. Popup UI interaction remains unverified.
+restrictions. In subsequent CI attempts Chromium loaded the extension, but test
+navigation to the popup and then the HTTPS fixture timed out before behavior
+assertions ran. **The browser suite has not completed successfully.** It is
+experimental and runs in Actions only when manually requested through
+**Run workflow → browser_tests**. It controls settings through Chromium's test
+API; popup UI interaction is also unverified. This is an unresolved test-setup
+issue, not evidence of compatibility with a real account or device.
 
 ### Project structure
 
